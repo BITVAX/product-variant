@@ -217,7 +217,11 @@ class ProductProduct(models.Model):
         self.env.cr.flush()  # https://github.com/odoo/odoo/blob/16.0/odoo/models.py#L5592
         for rec in self:
             if not rec.manual_code:
-                rec.default_code = rec._generate_default_code()
+                new_code = rec._generate_default_code()
+                # Only write if the value actually changed to avoid unnecessary
+                # write_date updates that can cause PostgreSQL serialization errors
+                if rec.default_code != new_code:
+                    rec.default_code = new_code
 
     def _inverse_default_code(self):
         for rec in self:
