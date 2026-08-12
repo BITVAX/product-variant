@@ -214,7 +214,9 @@ class ProductProduct(models.Model):
         "product_template_attribute_value_ids.product_attribute_value_id.code",
     )
     def _compute_default_code(self):
-        self.env.cr.flush()  # https://github.com/odoo/odoo/blob/16.0/odoo/models.py#L5592
+        # Never flush inside this compute: a nested flush re-enters
+        # _recompute_all and recurses through the template<->variant
+        # default_code chain (RecursionError with many pending records).
         for rec in self:
             if not rec.manual_code:
                 new_code = rec._generate_default_code()
